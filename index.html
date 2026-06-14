@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Ironman"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<title>Ironman Training</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#000000;
+    --surface:#111111;
+    --surface2:#1a1a1a;
+    --border:#2a2a2a;
+    --text:#ffffff;
+    --muted:#888888;
+    --muted2:#555555;
+    --red:#e53535;
+    --red-dim:#ff4444;
+    --red-bg:#1a0000;
+    /* Activity type colors — all red-family with different shades for readability */
+    --run:#ff6b6b;
+    --run-bg:#1a0a0a;
+    --bike:#ff4444;
+    --bike-bg:#180808;
+    --brick:#ff2222;
+    --brick-bg:#150505;
+    --strength:#cc2222;
+    --strength-bg:#120303;
+    --swim:#ff8888;
+    --swim-bg:#1c0c0c;
+    --rest:#555555;
+    --rest-bg:#0f0f0f;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bot:env(safe-area-inset-bottom,0px);
+  }
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+
+  /* ── LAYOUT ── */
+  #app{display:flex;flex-direction:column;height:100%;height:100dvh}
+  #header{flex-shrink:0;padding:calc(var(--safe-top) + 12px) 16px 12px;background:var(--bg);border-bottom:1px solid var(--border)}
+  #nav{flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none}
+  #nav::-webkit-scrollbar{display:none}
+  #scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(var(--safe-bot) + 24px)}
+
+  /* ── HEADER ── */
+  .hdr-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .hdr-title{font-size:20px;font-weight:800;letter-spacing:-0.5px;color:#fff}
+  .hdr-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .hdr-badge{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:12px;font-weight:600;color:var(--text);white-space:nowrap}
+  .hdr-dot{width:7px;height:7px;border-radius:50%;animation:pulse 2s ease-in-out infinite;background:var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  /* ── PHASE TABS ── */
+  .phase-tab{flex:none;padding:10px 14px;background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;transition:border-color 0.15s;color:var(--muted);min-width:0}
+  .phase-tab.active{border-bottom-color:var(--red);color:#fff}
+  .phase-tab-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px}
+  .phase-tab-sub{font-size:10px;margin-top:2px;white-space:nowrap}
+
+  /* ── WEEK STRIP ── */
+  .week-strip{display:flex;gap:6px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);background:var(--surface)}
+  .week-strip::-webkit-scrollbar{display:none}
+  .wk-btn{flex-shrink:0;width:44px;height:44px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all 0.15s;position:relative}
+  .wk-btn.active{background:var(--red);border-color:var(--red);color:#fff}
+  .wk-btn.today-week{border-color:var(--red);color:var(--red)}
+  .wk-btn.deload{outline:2px solid var(--muted);outline-offset:2px}
+  .wk-num{font-size:13px}
+  .deload-pip{width:4px;height:4px;border-radius:50%;background:var(--muted)}
+
+  /* ── WEEK HEADER ── */
+  .week-hdr{padding:14px 14px 10px}
+  .week-hdr-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .week-title{font-size:22px;font-weight:900;letter-spacing:-0.5px;color:#fff}
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px}
+  .focus-bar{background:var(--surface);border-left:3px solid var(--red);border-radius:0 8px 8px 0;padding:10px 12px;font-size:13px;color:var(--muted);line-height:1.6}
+
+  /* ── TODAY CALLOUT ── */
+  .today-callout{margin:0 14px 10px;background:var(--red-bg);border:1px solid var(--red);border-radius:10px;padding:10px 12px}
+  .today-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:4px}
+  .today-sessions{display:flex;gap:6px;flex-wrap:wrap}
+
+  /* ── PROGRESS BAR ── */
+  .prog-wrap{padding:0 14px 10px}
+  .prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
+  .prog-track{height:4px;background:var(--border);border-radius:4px;overflow:hidden}
+  .prog-fill{height:100%;border-radius:4px;transition:width 0.4s ease;background:var(--red)}
+
+  /* ── DAY CARDS ── */
+  .days-list{display:flex;flex-direction:column;gap:6px;padding:0 14px}
+  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.15s}
+  .day-card.today-card{border-color:var(--red)}
+  .day-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
+  .day-name{width:32px;flex-shrink:0;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+  .day-name.today-name{color:var(--red)}
+  .day-pills{flex:1;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .day-chevron{color:var(--muted2);font-size:12px;flex-shrink:0;transition:transform 0.2s;line-height:1}
+  .day-chevron.open{transform:rotate(180deg)}
+
+  /* ── TYPE PILL ── */
+  .pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
+  .pill-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .p-run{background:var(--run-bg);color:var(--run);border:1px solid #ff6b6b33}
+  .p-bike{background:var(--bike-bg);color:var(--bike);border:1px solid #ff444433}
+  .p-brick{background:var(--brick-bg);color:var(--brick);border:1px solid #ff222233}
+  .p-strength{background:var(--strength-bg);color:var(--strength);border:1px solid #cc222233}
+  .p-swim{background:var(--swim-bg);color:var(--swim);border:1px solid #ff888833}
+  .p-rest{background:var(--rest-bg);color:var(--rest);border:1px solid #55555533}
+
+  /* ── EXPANDED SESSIONS ── */
+  .day-body{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border)}
+  .session-block{border-radius:10px;padding:11px 12px;border:1px solid transparent}
+  .s-run{background:var(--run-bg);border-color:#ff6b6b22}
+  .s-bike{background:var(--bike-bg);border-color:#ff444422}
+  .s-brick{background:var(--brick-bg);border-color:#ff222222}
+  .s-strength{background:var(--strength-bg);border-color:#cc222222}
+  .s-swim{background:var(--swim-bg);border-color:#ff888822}
+  .s-rest{background:var(--rest-bg);border-color:#55555522}
+
+  .session-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+  .session-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .session-time{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px}
+
+  /* ── COMPLETE BUTTON ── */
+  .complete-btn{flex-shrink:0;width:30px;height:30px;border-radius:50%;border:2px solid currentColor;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s;position:relative}
+  .complete-btn.done{background:currentColor;border-color:currentColor}
+  .complete-btn.done::after{content:'✓';position:absolute;color:#fff;font-size:13px;font-weight:900}
+
+  /* ── SETS LIST ── */
+  .sets-list{list-style:none;padding:0}
+  .sets-list li{font-size:13px;color:#aaaaaa;line-height:1.7;padding-left:14px;position:relative}
+  .sets-list li::before{content:'·';position:absolute;left:4px;color:var(--muted2)}
+
+  /* ── COACH NOTE ── */
+  .coach-note{margin:12px 14px 0;background:var(--surface2);border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start}
+  .coach-note span{font-size:12px;color:var(--muted);line-height:1.6;font-style:italic}
+
+  /* ── TAPER CARD ── */
+  .taper-card{margin:12px 14px 0;background:var(--red-bg);border:1px solid var(--red)55;border-radius:12px;padding:14px}
+  .taper-title{font-size:13px;font-weight:800;color:var(--red);margin-bottom:10px}
+  .taper-row{display:flex;gap:10px;font-size:12px;margin-bottom:5px}
+  .taper-wk{font-weight:700;color:var(--red-dim);min-width:110px}
+  .taper-desc{color:var(--muted)}
+
+  /* ── INSTALL HINT ── */
+  .install-hint{margin:12px 14px 0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.6;text-align:center}
+
+  /* ── DOUBLE BADGE ── */
+  .double-badge{font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-weight:700;letter-spacing:0.3px}
+
+  /* ── COMPLETED OVERLAY ── */
+  .session-block.completed{opacity:0.45}
+  .session-block.completed .sets-list li{text-decoration:line-through;color:var(--muted2)}
+
+  /* Toast */
+  #toast{position:fixed;bottom:calc(var(--safe-bot)+24px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--red);border-radius:20px;padding:8px 18px;font-size:13px;font-weight:600;color:#fff;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:99}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="hdr-row">
+      <div>
+        <div class="hdr-title">Ironman Training</div>
+        <div class="hdr-sub" id="hdr-sub">Loading…</div>
+      </div>
+      <div class="hdr-badge">
+        <span class="hdr-dot" id="live-dot"></span>
+        <span id="hdr-today"></span>
+      </div>
+    </div>
+  </div>
+  <div id="nav"></div>
+  <div id="scroll">
+    <div id="week-strip-wrap"></div>
+    <div id="week-content"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+// Week 1 starts June 15 2026 (Monday). Race day Nov 7 2026.
+// Jun 15 → Nov 7 = 145 days = 20 weeks + 5 days.
+// Race falls on Saturday of Week 21.
+// Structure: 17 weeks training → 3-week taper (wks 18, 19, 20) → Race Sat Nov 7 (wk 21)
+// We use 21 weeks total. Weeks 22-24 are removed as post-race.
+const PROGRAM_START = new Date(2026, 5, 15, 0, 0, 0, 0); // month is 0-indexed
+const RACE_DATE     = new Date(2026, 10, 7, 0, 0, 0, 0);
+
+function daysToRace() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.ceil((RACE_DATE - now) / 86400000);
+}
+
+const PHASES = [
+  {label:"Phase 1", sub:"Run + Bike",           color:"#f59e0b", weeks:"Wks 1–5 · Jun 15",    range:[1,5]},
